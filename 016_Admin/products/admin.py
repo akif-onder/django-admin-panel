@@ -1,5 +1,6 @@
 from django.utils import timezone
 from django.contrib import admin
+from django.utils.safestring import mark_safe
 
 from .models import Category, Product, Review
 
@@ -15,7 +16,7 @@ class ReviewInline(admin.TabularInline):
     # max_num = 20
 
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ("name", "create_date", "is_in_stock", "update_date", 'added_days_ago', 'how_many_reviews',)
+    list_display = ("name", "create_date", "is_in_stock", "update_date", 'added_days_ago', 'how_many_reviews','bring_img_to_list')
     list_editable = ('is_in_stock',)
     list_display_links = ('name', 'create_date')
     search_fields = ('name', 'create_date')
@@ -23,6 +24,7 @@ class ProductAdmin(admin.ModelAdmin):
     list_per_page = 20
     date_hierarchy = 'update_date'
     inlines = (ReviewInline,)
+    readonly_fields = ("bring_image",)
 
     # fields=(('name', 'slug'),'description', "is_in_stock" )
     fieldsets = (
@@ -34,7 +36,7 @@ class ProductAdmin(admin.ModelAdmin):
         }),
         ('Optionals Settings', {
             "classes" : ("collapse", ),
-            "fields" : ("description",'additional_info', 'categories'),
+            "fields" : ("description",'additional_info', 'categories', 'product_img', 'bring_image'),
             'description' : "You can use this section for optionals settings"
         })
 
@@ -52,6 +54,14 @@ class ProductAdmin(admin.ModelAdmin):
     def added_days_ago(self, product):
         diff = timezone.now() - product.create_date
         return diff.days
+
+    def bring_img_to_list(self, obj):
+        if obj.product_img:
+            return mark_safe(f"<img src={obj.product_img.url} width=50 height=50></img>")
+        return mark_safe("******")
+
+    bring_img_to_list.short_description = "product_image"
+
 
 class ReviewAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'created_date', 'is_released')
