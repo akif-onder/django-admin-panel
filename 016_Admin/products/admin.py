@@ -1,10 +1,17 @@
 from django.utils import timezone
 from django.contrib import admin
 from django.utils.safestring import mark_safe
+from django_admin_listfilter_dropdown.filters import RelatedDropdownFilter, DropdownFilter
+
+from rangefilter.filters import DateTimeRangeFilter
+
+from import_export.admin import ImportExportModelAdmin
+from .resources import ReviewResource
 
 from .models import Category, Product, Review
 
 # Register your models here.
+
 
 
 class ReviewInline(admin.TabularInline):  
@@ -18,6 +25,7 @@ class ReviewInline(admin.TabularInline):
 class ProductAdmin(admin.ModelAdmin):
     list_display = ("name", "create_date", "is_in_stock", "update_date", 'added_days_ago', 'how_many_reviews','bring_img_to_list')
     list_editable = ('is_in_stock',)
+    list_filter  = ('is_in_stock', ('create_date', DateTimeRangeFilter),('name', DropdownFilter))
     list_display_links = ('name', 'create_date')
     search_fields = ('name', 'create_date')
     prepopulated_fields = {'slug':('name',)}
@@ -63,10 +71,14 @@ class ProductAdmin(admin.ModelAdmin):
     bring_img_to_list.short_description = "product_image"
 
 
-class ReviewAdmin(admin.ModelAdmin):
+class ReviewAdmin(ImportExportModelAdmin):
     list_display = ('__str__', 'created_date', 'is_released')
     list_per_page = 50
-    raw_id_fields = ('product',) 
+    raw_id_fields = ('product',)
+    list_filter = (
+        ('product', RelatedDropdownFilter),
+    ) 
+    resource_class = ReviewResource
 
     actions = ('is_released',)
 
